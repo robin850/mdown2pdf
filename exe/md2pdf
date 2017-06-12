@@ -11,8 +11,8 @@ class MD2PDFConvert < Thor
     default: "FILE.pdf"
 
   def convert(file)
-    Mdown2PDF.temporary_html_file_for(file) do |tmp_file|
-      Mdown2PDF.output(file: tmp_file, name: file)
+    Mdown2PDF.temporary_html_files_for(file) do |output, cover|
+      Mdown2PDF.output(file: output, name: file, cover: cover)
     end
   end
 end
