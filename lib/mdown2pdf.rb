@@ -32,7 +32,7 @@ module Mdown2PDF
     first_hr = document.index('<hr>')
 
     if first_hr
-      cover    = document[0..first_hr]
+      cover    = document[0...first_hr]
       document = document[first_hr+4..-1]
     end
 
@@ -61,7 +61,9 @@ module Mdown2PDF
   #    to PDF.
   #  - `:name` will be used to infer the PDF file's name.
   #  - `:cover` can be used if a document should be used as a cover.
-  def output(file: , name: , cover: nil)
+  #  - `:toc` specifies whether a table of contents should be generated
+  #     or not for the document.
+  def output(file: , name: , cover: nil, toc: false)
     stylesheet = ["--user-style-sheet", asset('style.css')]
     arguments  = ["wkhtmltopdf"]
 
@@ -69,6 +71,8 @@ module Mdown2PDF
       arguments.push("cover", cover)
       arguments.push(*stylesheet)
     end
+
+    arguments.push("toc", "--xsl-style-sheet", asset("toc.xsl")) if toc
 
     arguments.push(
       file,

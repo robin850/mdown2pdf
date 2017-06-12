@@ -13,7 +13,12 @@ class MD2PDFConvert
     @@args = args
 
     Mdown2PDF.temporary_html_files_for(file) do |output, cover|
-      Mdown2PDF.output(file: output, name: destination, cover: cover)
+      Mdown2PDF.output(
+        file: output,
+        name: destination,
+        cover: cover,
+        toc: toc
+      )
     end
   end
 
@@ -24,6 +29,10 @@ class MD2PDFConvert
     puts
     puts "-o, [--output]      Specify the output file name. By default it"
     puts "                    is inferred with the given Markdown file name."
+    puts
+    puts "--skip-toc          Flag to specify whether the table of contents"
+    puts "                    should be skipped from the output. Disabled by"
+    puts "                    default."
   end
 
   def self.args
@@ -50,6 +59,10 @@ class MD2PDFConvert
 
       args[0]
     end
+  end
+
+  def self.toc
+    !args.include?('--skip-toc')
   end
 end
 
