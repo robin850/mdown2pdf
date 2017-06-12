@@ -1,38 +1,62 @@
-# Mdown2pdf
+# Mdown2PDF - Convert Markdown documents to PDF
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/mdown2pdf`. To experiment with that code, run `bin/console` for an interactive prompt.
+This tiny project is a wrapper around the following libraries to generate PDF from
+Markdown files:
 
-TODO: Delete this and the text above, and describe your gem
+* [Redcarpet](https://github.com/vmg/redcarpet) : to parse Markdown and produce HTML.
+* [Rouge](https://github.com/jneen/rouge) : to support syntax highlighting.
+* [wkhtmltopdf](https://wkhtmltopdf.org/) : to transform the HTML markup to a PDF file.
+
+> **Important note**: This project has been designed for my personal need; it's far
+> from being perfect but feel free to fork it to fit to yours. ❤️
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-```ruby
+~~~ruby
 gem 'mdown2pdf'
-```
+~~~
 
 And then execute:
 
-    $ bundle
+~~~
+$ bundle
+~~~
 
 Or install it yourself as:
 
-    $ gem install mdown2pdf
+~~~
+$ gem install mdown2pdf
+~~~
 
 ## Usage
 
-TODO: Write usage instructions here
+This gems provides a command line utility to easily convert your Markdown files
+to PDF. For example:
 
-## Development
+~~~
+$ md2pdf resume.md
+~~~
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Will produce a file called resume.pdf, properly styled with a table of contents.
+You can specify the output file and even opt out from the default table of contents
+generation with the following options:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+~~~
+$ md2pdf resume.md -o my_resume.pdf --skip-toc
+~~~
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/mdown2pdf.
+Bug reports and pull requests are welcome on GitHub. If you are willing to send
+a patch:
+
+1. Fork this project.
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
 
 ## License
 
