@@ -1,20 +1,56 @@
 #!/usr/bin/env ruby
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 
-require "thor"
 require "mdown2pdf"
 
-class MD2PDFConvert < Thor
-  desc "convert FILE", "Convert a given Markdown file to PDF"
+class MD2PDFConvert
+  def self.convert(args)
+    if args.include?('-h') || args.include?('--help')
+      help
+      exit
+    end
 
-  option :output, type: :string, desc: "The output file name.",
-    default: "FILE.pdf"
+    @@args = args
 
-  def convert(file)
     Mdown2PDF.temporary_html_files_for(file) do |output, cover|
-      Mdown2PDF.output(file: output, name: file, cover: cover)
+      Mdown2PDF.output(file: output, name: destination, cover: cover)
+    end
+  end
+
+  def self.help
+    puts "Usage: md2pdf file [options]"
+    puts
+    puts "Available options:"
+    puts
+    puts "-o, [--output]      Specify the output file name. By default it"
+    puts "                    is inferred with the given Markdown file name."
+  end
+
+  def self.args
+    @@args
+  end
+
+  def self.destination
+    @@destination ||= begin
+      if args.include?('--output') || args.include?('-o')
+        position = (args.index('--output') || args.index('-o')) + 1
+        args[position]
+      else
+        file
+      end
+    end
+  end
+
+  def self.file
+    @@file ||= begin
+      if !args[0]
+        puts "No input file given. The path to a Markdown file is required."
+        exit
+      end
+
+      args[0]
     end
   end
 end
 
-MD2PDFConvert.start(ARGV)
+MD2PDFConvert.convert(ARGV)
