@@ -1,0 +1,28 @@
+PATH
+  remote: .
+  specs:
+    mdown2pdf (0.1.0)
+      redcarpet (~> 3.4.0)
+      rouge (~> 2.1.0)
+      thor (~> 0.19.4)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    minitest (5.10.2)
+    rake (10.5.0)
+    redcarpet (3.4.0)
+    rouge (2.1.0)
+    thor (0.19.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.15)
+  mdown2pdf!
+  minitest (~> 5.0)
+  rake (~> 10.0)
+
+BUNDLED WITH
+   1.15.1

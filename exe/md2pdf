@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+
+require "thor"
+require "mdown2pdf"
+
+class MD2PDFConvert < Thor
+  desc "convert FILE", "Convert a given Markdown file to PDF"
+
+  option :output, type: :string, desc: "The output file name.",
+    default: "FILE.pdf"
+
+  def convert(file)
+    Mdown2PDF.temporary_html_file_for(file) do |tmp_file|
+      Mdown2PDF.output(file: tmp_file, name: file)
+    end
+  end
+end
+
+MD2PDFConvert.start(ARGV)
