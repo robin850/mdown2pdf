@@ -1,0 +1,191 @@
+#!/usr/local/bin/ruby
+
+require 'redcarpet'
+require 'rouge'
+require 'tempfile'
+
+class PseudoCodeLexer < Rouge::RegexLexer
+  tag 'pseudo'
+  title 'Pseudo Code'
+
+  def self.keywords
+    @keywords ||= Set.new %w(
+      fonction programme tant que faire si alors sinon fin jusqu à
+      ce début procédure pour allant de pas et chaque non dans
+    )
+  end
+
+  def self.declaration_keywords
+    @declaration_keywords ||= Set.new %w(
+      var Entrée Sortie
+    )
+  end
+
+  def self.types
+    @types ||= Set.new %w(
+      Graphe Sommet
+    )
+  end
+
+  state :whitespace do
+    rule /\s+/m, Text
+    rule %r{(//).*$\n}, Comment::Single
+  end
+
+  state :literal do
+    rule /"(\\.|.)*?"/, Str::Double
+    rule /'(\\.|.)*?'/, Str::Single
+
+    rule /(\.\.)/,  Punctuation
+
+    rule %r((\d+[.]\d+)), Num::Float
+    rule /\d+/, Num
+
+    rule /(\+|\-|\*|\/\/?|\*\*?)/, Operator
+
+    rule /(<=?|>=?|==|!=)/, Operator
+    rule %r{∞}, Operator
+
+    rule /,/,  Punctuation
+    rule /:/,  Punctuation
+    rule /\[/, Punctuation
+    rule /\]/, Punctuation
+    rule /\(/, Punctuation
+    rule /\)/, Punctuation
+    rule /;/, Punctuation
+    rule /\|\_/, Punctuation
+    rule /\_\|/, Punctuation
+    rule /\|/, Punctuation
+    rule %r{'}, Punctuation
+    rule %r{=}, Punctuation
+    rule %r{\{|\}}, Punctuation
+
+    rule /(\+|\-|\*|\/\/?|\*\*?)/, Operator
+  end
+
+  state :root do
+    mixin :whitespace
+    mixin :literal
+
+    rule /(vrai|faux|nul|Nil)\b/i, Name::Builtin
+
+    rule /([[:alpha:]]([[:alnum:]](_[[:alnum:]])?)*)/ do |m|
+      name = m[0]
+
+      if self.class.keywords.include? name
+        token Keyword
+      elsif self.class.declaration_keywords.include? name
+        token Keyword::Declaration
+      elsif self.class.types.include? name
+        token Keyword::Type
+      else
+        token Name
+      end
+    end
+  end
+end
+
+class CustomToc < Redcarpet::Render::Base
+  def paragraph(text)
+    nil
+  end
+
+  def header(text, level)
+    previous = @level || 12
+    @level   = level
+    alphabet = ['a'..'z']
+
+    anchor = text.chars.keep_if do |c|
+      c =~ /[[:alpha:]]/ || c == ''
+    end.join("").downcase.gsub(' ', '-')
+
+    if previous > @level
+      %(</ul><li><a href="##{anchor}">#{text}</a></li>)
+    elsif previous < @level
+      %(<ul><li><a href="##{anchor}">#{text}</a></li>)
+    else
+      %(<li><a href="##{anchor}">#{text}</a></li>)
+    end
+  end
+
+  def doc_header
+    %(<ul style="margin-left: 150px;">)
+  end
+
+  def doc_footer
+    %(</ul>)
+  end
+end
+
+class CustomRender < Redcarpet::Render::HTML
+  def block_code(code, lang)
+    lexer = Rouge::Lexer.find_fancy(lang, code) || Rouge::Lexers::PlainText
+
+    if lexer.tag == 'make'
+      code.gsub! /^  /, "\t"
+    end
+
+    %(<div class="highlight"><pre>#{Rouge::Formatters::HTML.new.format(lexer.lex(code))}</pre></div>)
+  end
+
+  def codespan(code)
+    if code.start_with?("#")
+      %(<div style="height: 20px; margin: auto; width: 40px; background: #{code}"></div>)
+    else
+      %(<code>#{code}</code>)
+    end
+  end
+
+  def header(text, level)
+    alphabet = ['a'..'z'] + []
+
+    anchor = text.chars.keep_if do |c|
+      c =~ /[[:alpha:]]/ || c == ''
+    end.join("")
+
+    %(<h#{level} id="#{anchor.downcase.gsub(' ', '-')}">#{text}</h#{level}>)
+  end
+
+  def image(link, title, text)
+    %(<img src="#{Dir.pwd}/#{link}">)
+  end
+
+  def paragraph(text)
+    if text == "[toc]"
+      Redcarpet::Markdown.new(CustomToc, fenced_code_blocks: true).render(@document)
+    else
+      %(<p>#{text}</p>)
+    end
+  end
+
+  def preprocess(document)
+    @document = document
+  end
+end
+
+parser = Redcarpet::Markdown.new(CustomRender, {
+  fenced_code_blocks: true,
+  tables:             true,
+  superscript:        true,
+  strikethrough:      true,
+  autolink:           true
+})
+
+path = "/tmp/output-#{(rand * 100).round}.html"
+
+File.open(path, "w") do |f|
+  f.write('<!DOCTYPE html>')
+  f.write('<html>')
+  f.write('<head>')
+  f.write('<meta charset="utf-8">')
+  f.write('</head>')
+  f.write('<body><div class="markdown-body" style="width: 960px; margin: auto">')
+  f.write(parser.render(File.read(ARGV[0])))
+  f.write('</div></body>')
+end
+
+# puts parser.render(File.read(ARGV[0]))
+
+`wkhtmltopdf #{path} --include-in-outline --enable-internal-links --user-style-sheet #{__dir__}/style.css #{ARGV[0].sub(/.(md|mdwon)/, '.pdf')}`
+
+File.delete(path)
